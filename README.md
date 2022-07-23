@@ -24,9 +24,9 @@ Clone this repository. On its folder, run
 ## Running the app
 
 On the project folder, run  
-`$ rackup`  
+`$ bundle exec rackup`  
 
 ## Test suite
 
 On the project folder, run  
-`$ rspec`    
+`$ bundle exec rspec`    
