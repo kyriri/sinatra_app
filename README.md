@@ -21,6 +21,11 @@ Ruby 3.1.2
 Clone this repository. On its folder, run  
 `$ bundle install`  
 
+## Running the app
+
+On the project folder, run  
+`$ rackup`  
+
 ## Test suite
 
 On the project folder, run  

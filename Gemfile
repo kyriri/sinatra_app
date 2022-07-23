@@ -6,10 +6,13 @@ ruby '3.1.2'
 # web framework
 gem 'sinatra'
 
-# required by sinatra
+# http server toolkit, required by sinatra
 gem 'webrick'
 
 group :development, :test do
-  # testing tool
+  # make http verbs available as testing methods
+  gem 'rack-test'
+
+  # main testing tool
   gem 'rspec'
 end
