@@ -20,3 +20,8 @@ Ruby 3.1.2
 
 Clone this repository. On its folder, run  
 `$ bundle install`  
+
+## Test suite
+
+On the project folder, run  
+`$ rspec`    
