@@ -11,3 +11,12 @@ This is a study project. Its objectives are:
 - [ ] implementing an assyncronous (background) job
 - [ ] cloud deploying the app
 - [ ] having a React front-end
+
+## Requirements
+
+Ruby 3.1.2
+
+## Installation
+
+Clone this repository. On its folder, run  
+`$ bundle install`  
