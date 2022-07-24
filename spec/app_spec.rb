@@ -1,4 +1,4 @@
-RSpec.describe App, type: :request do
+RSpec.describe App do
   let(:app) { App.new }
 
   context 'receives GET "/"' do
