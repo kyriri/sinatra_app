@@ -1,0 +1,8 @@
+services:
+  exams-api:
+    build: .
+    image: exams-api
+    container_name: exams-api
+    ports: 
+      - "3000:9292"
+    
