@@ -1,0 +1,44 @@
+' option + D to preview
+
+@startuml "Lab Tests API"
+
+class Physician {
+  +name
+  +crm
+  +crm_state
+}
+
+class Patient {
+  +name
+  +cpf
+  +email
+  +birth_date
+}
+
+class TestType {
+  +name
+  +result_range
+}
+
+class TestResult {
+  +result
+  +result_date
+}
+
+class TestReport {
+  +token
+}
+
+Patient "1" -- "*" TestReport
+
+TestReport "1" o-- "1..*" TestResult
+
+TestType "1" - "*" TestResult : "         "
+' A result belongs to a test type
+' A test type can have zero or more results
+
+TestReport "*" - "0..1" Physician : "           "
+' A physician may ask (a patient to do) many lab tests, which will come together in a test report
+' Each test report may have zero or one physician (since sometimes the patient can ask for a test also)
+
+@enduml
