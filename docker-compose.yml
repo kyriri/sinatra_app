@@ -1,8 +1,8 @@
 services:
-  exams-api:
+  lab-tests-api:
     build: .
-    image: exams-api
-    container_name: exams-api
+    image: lab-tests-api
+    container_name: lab-tests-api
     ports: 
       - "3000:9292"
     
