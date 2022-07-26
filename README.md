@@ -30,9 +30,12 @@ On the project folder, run
 
 The connections are managed via Active Record, through the file `config/database.yml`.
 For a list of available automated tasks concerning the database, check  
-`$ bundle exec rake -T`  
+`$ bundle exec rake --tasks`  
 
 ## Test suite
 
 On the project folder, run  
-`$ bundle exec rspec`    
+`$ bundle exec rspec`  
+
+If for any reason the test database is dirty and needs manual cleaning, try  
+`$ bundle exec rake db:drop db:create db:migrate RACK_ENV="test"`

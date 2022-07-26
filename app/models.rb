@@ -1,2 +1,3 @@
-class Model < ActiveRecord::Base
+class Patient < ActiveRecord::Base
+  
 end
