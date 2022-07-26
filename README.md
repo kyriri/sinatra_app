@@ -26,6 +26,12 @@ Clone this repository. On its folder, run
 On the project folder, run  
 `$ bundle exec rackup`  
 
+## Managing the database
+
+The connections are managed via Active Record, through the file `config/database.yml`.
+For a list of available automated tasks concerning the database, check  
+`$ bundle exec rake -T`  
+
 ## Test suite
 
 On the project folder, run  
