@@ -21,7 +21,7 @@ class InformationUpdater
 
     data.each do |line|
 
-      if Patient.where(name: line[indexes[:patient_name]]).empty?
+      if Patient.where(cpf: line[indexes[:patient_cpf]]).empty?
         Patient.create(
           name: line[indexes[:patient_name]],
           cpf: line[indexes[:patient_cpf]],

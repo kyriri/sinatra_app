@@ -17,6 +17,7 @@
 ENV['RACK_ENV'] = 'test'
 
 require 'rack/test'
+require 'factory_bot'
 require_relative '../app/app'
 
 RSpec.configure do |config|
@@ -26,6 +27,13 @@ RSpec.configure do |config|
   # Clean testing database before every run
   config.before :each do
     ActiveRecord::Base.subclasses.each(&:delete_all)
+  end
+
+  # Setup gem FactoryBot
+  config.include FactoryBot::Syntax::Methods
+
+  config.before(:suite) do
+    FactoryBot.find_definitions
   end
   
   # rspec-expectations config goes here. You can use an alternate
