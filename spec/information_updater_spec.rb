@@ -27,10 +27,14 @@ RSpec.describe InformationUpdater do
       expect(Patient.all.size).to be 2
     end
 
-    it 'does not duplicate patients' do
+    it 'does not saves again a Patient that was already in the database' do
       create(:patient, cpf: '037.787.232-60')
+      data = [
+        ['cpf', 'nome paciente', 'email paciente', 'data nascimento paciente', 'endereço/rua paciente', 'cidade paciente', 'estado patiente'], 
+        ['037.787.232-60', 'João Felipe Louzada', 'clifton_hyatt@koss.biz', '1985-01-22', 's/n Viela Theo Modesto', 'Cachoeira dos Índios', 'Tocantins'],
+      ]
 
-      expect(Patient.last.cpf).to eq '037.787.232-60'
+      expect { InformationUpdater.create_patients(data) }.not_to change { Patient.all.size }
     end
 
     xit 'works even if the array contains more data' do
