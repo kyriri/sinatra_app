@@ -1,0 +1,4 @@
+cpf;nome paciente;email paciente;data nascimento paciente;endereço/rua paciente;cidade paciente;estado patiente;crm médico;crm médico estado;nome médico;email médico;token resultado exame;data exame;tipo exame;limites tipo exame;resultado tipo exame
+018.581.237-63;Ana Beatriz Rios;hobert_marquardt@kulas.biz;1989-09-26;6425 Rua Emilly Nogueira;Carnaubal;Distrito Federal;B0002W2RBG;CE;Dra. Isabelly Rêgo;diann_klein@schinner.org;B2KHO4;2021-12-01;hemácias;45-52;25
+018.581.237-63;Ana Beatriz Rios;hobert_marquardt@kulas.biz;1989-09-26;6425 Rua Emilly Nogueira;Carnaubal;Distrito Federal;B0002W2RBG;CE;Dra. Isabelly Rêgo;diann_klein@schinner.org;B2KHO4;2021-12-01;leucócitos;9-61;94
+037.787.232-60;João Felipe Louzada;clifton_hyatt@koss.biz;1985-01-22;s/n Viela Theo Modesto;Cachoeira dos Índios;Tocantins;B0002W2RBG;CE;Dra. Isabelly Rêgo;diann_klein@schinner.org;L3VQDE;2021-09-10;vldl;48-72;60
