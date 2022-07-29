@@ -69,7 +69,7 @@ RSpec.configure do |config|
   # Allows RSpec to persist some state between runs in order to support
   # the `--only-failures` and `--next-failure` CLI options. We recommend
   # you configure your source control system to ignore this file.
-  config.example_status_persistence_file_path = "spec/failures.txt"
+  config.example_status_persistence_file_path = "spec/support/results.txt"
 
   # This setting enables warnings. It's recommended, but in some cases may
   # be too noisy due to issues in dependencies.

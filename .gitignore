@@ -5,7 +5,7 @@
 /InstalledFiles
 /pkg/
 /spec/reports/
-/spec/failures.txt
+spec/support/results.txt
 /test/tmp/
 /test/version_tmp/
 /tmp/
