@@ -23,14 +23,14 @@ class InformationUpdater
 
   def self.build_cache(type:, keys:)
     sanitized_type = type.split('_').map(&:capitalize).join
-    Object.const_get(sanitized_type)
+    Object.const_get(sanitized_type) # yields model name, ex: Patient
           .select(:id, *keys)
           .each_with_object({}) do |record, cache|
             cache_key = keys.map { |key| record[key] }.join.to_sym
             cache.store(cache_key, record.id)
           end
   rescue NameError
-    raise InvalidType.new "Invalid type: No matching ActiveRecord #{sanitized_type} table exists"
+    raise InvalidType.new "Invalid type: No matching ActiveRecord #{sanitized_type} model exists"
   end
 
   def self.call(path)
