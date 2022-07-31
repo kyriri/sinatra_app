@@ -1,4 +1,5 @@
 class Patient < ActiveRecord::Base
+  validates_uniqueness_of :cpf
 end
 
 class Physician < ActiveRecord::Base
