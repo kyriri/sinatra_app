@@ -1,6 +1,52 @@
 RSpec.describe InformationUpdater do
   let(:app) { App.new }
 
+  context '.build_cache' do
+    it 'builds cache using simple key' do
+      ['540.772.581-97', '184.606.175-05', '615.996.385-68'].each { |cpf| create(:patient, cpf: cpf) } 
+      
+      cached_patient_ids = InformationUpdater.build_cache(type: 'patient', keys: [:cpf])
+
+      expect(cached_patient_ids).to be_a Hash
+      expect(cached_patient_ids.first[0]).to be_a Symbol   # key
+      expect(cached_patient_ids.first[1]).to be_an Integer # value
+
+      expect(cached_patient_ids.size).to be 3
+      expect(cached_patient_ids['184.606.175-05'.to_sym]).to eq Patient.find_by(cpf: '184.606.175-05').id
+    end
+
+    it 'builds cache using composite key' do
+      create(:physician, crm_state: 'AL', crm_number: '3852')
+      create(:physician, crm_state: 'RR', crm_number: '455')
+      
+      cached_physician_ids = InformationUpdater.build_cache(type: 'physician', keys: [:crm_state, :crm_number])
+
+      expect(cached_physician_ids).to be_a Hash
+      expect(cached_physician_ids.first[0]).to be_a Symbol   # key
+      expect(cached_physician_ids.first[1]).to be_an Integer # value
+
+      expect(cached_physician_ids.size).to be 2
+      expect(cached_physician_ids['AL3852'.to_sym]).to eq Physician.find_by(crm_state: 'AL', crm_number: '3852').id
+    end
+
+    it 'can handle multi-word types' do
+      create(:test_report, token: 'JH9876G')
+      create(:test_report, token: 'L08EHV8')
+      
+      cached_reports_ids = InformationUpdater.build_cache(type: 'test_report', keys: [:token])
+
+      expect(cached_reports_ids.size).to be 2
+      expect(cached_reports_ids['L08EHV8'.to_sym]).to eq TestReport.find_by(token: 'L08EHV8').id
+     end
+
+    it 'raises exception if the table is not known' do
+      expect { 
+        InformationUpdater.build_cache(type: 'happiness', keys: [:chocolate, :ice_cream]) 
+      }.to raise_error InvalidType
+    end
+
+  end
+
   context '.call' do
     it 'persists patients to the database' do
       path = File.dirname(__FILE__) + '/support/data3_simple.csv'

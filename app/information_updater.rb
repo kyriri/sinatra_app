@@ -1,68 +1,72 @@
 require 'csv'
 
+class InvalidType < StandardError
+end
+
 class InformationUpdater
   
+  PATIENT_CPF = 'cpf'
+  PATIENT_NAME = 'nome paciente'
+  PATIENT_EMAIL = 'email paciente'
+  PATIENT_BIRTH_DATE = 'data nascimento paciente'
+
+  PHYSICIAN_NAME = 'nome médico'
+  PHYSICIAN_CRM_NUMBER = 'crm médico'
+  PHYSICIAN_CRM_STATE = 'crm médico estado'
+
+  TEST_NAME = 'tipo exame'
+  TEST_DATE = 'data exame'
+  TEST_RESULT_RANGE = 'limites tipo exame'
+  TEST_RESULT = 'resultado tipo exame'
+
+  REPORT_TOKEN = 'token resultado exame'
+
+  def self.build_cache(type:, keys:)
+    sanitized_type = type.split('_').map(&:capitalize).join
+    Object.const_get(sanitized_type)
+          .select(:id, *keys)
+          .each_with_object({}) do |record, cache|
+            cache_key = keys.map { |key| record[key] }.join.to_sym
+            cache.store(cache_key, record.id)
+          end
+  rescue NameError
+    raise InvalidType.new "Invalid type: No matching ActiveRecord #{sanitized_type} table exists"
+  end
+
   def self.call(path)
 
-    cached_patient_ids = 
-      Patient.select(:id, :cpf).each_with_object({}) do |record, cache|
-        cache.store(record.cpf.to_sym, record.id)
-      end
-
-    cached_physician_ids = 
-      Physician.select(:id, :crm_state, :crm_number).each_with_object({}) do |record, cache|
-        cache.store("#{record.crm_state}#{record.crm_number}".to_sym, record.id)
-      end
-
-    cached_report_ids = 
-        TestReport.select(:id, :token).each_with_object({}) do |record, cache|
-          cache.store(record.token.to_sym, record.id)
-        end
+    cached_patient_ids = self.build_cache(type: 'patient', keys: [:cpf])
+    cached_physician_ids = self.build_cache(type: 'physician', keys: [:crm_state, :crm_number])
+    cached_report_ids = self.build_cache(type: 'test_report', keys: [:token])
 
     new_tests = []
     
     File.open(path) do |file|
 
-      patient_cpf = 'cpf'
-      patient_name = 'nome paciente'
-      patient_email = 'email paciente'
-      patient_birth_date = 'data nascimento paciente'
-
-      physician_name = 'nome médico'
-      physician_crm_number = 'crm médico'
-      physician_crm_state = 'crm médico estado'
-
-      test_name = 'tipo exame'
-      test_date = 'data exame'
-      test_result_range = 'limites tipo exame'
-      test_result = 'resultado tipo exame'
-
-      test_report_token = 'token resultado exame'
-
-      CSV.foreach(file, headers: true, col_sep: ';') do |line|
+      CSV.foreach(file, headers: true, col_sep: ';') do |row|
 
         patient_id = (
-          if cached_patient_ids.has_key?(line[patient_cpf].to_sym)
-            cached_patient_ids[line[patient_cpf].to_sym]
+          if cached_patient_ids.has_key?(row[PATIENT_CPF].to_sym)
+            cached_patient_ids[row[PATIENT_CPF].to_sym]
           else
-            new_id = (Patient.create!(name: line[patient_name],
-                                      cpf: line[patient_cpf],
-                                      email: line[patient_email],
-                                      birth_date: line[patient_birth_date])
+            new_id = (Patient.create!(name: row[PATIENT_NAME],
+                                      cpf: row[PATIENT_CPF],
+                                      email: row[PATIENT_EMAIL],
+                                      birth_date: row[PATIENT_BIRTH_DATE])
                      ).id 
-            cached_patient_ids.store(line[patient_cpf].to_sym, new_id)
+            cached_patient_ids.store(row[PATIENT_CPF].to_sym, new_id)
             new_id
           end
         )
 
-        crm_state = line[physician_crm_state].strip.upcase
-        crm_number = line[physician_crm_number].strip.upcase
+        crm_state = row[PHYSICIAN_CRM_STATE].strip.upcase
+        crm_number = row[PHYSICIAN_CRM_NUMBER].strip.upcase
         full_crm = "#{crm_state}#{crm_number}".to_sym
         physician_id = (
           if cached_physician_ids.has_key?(full_crm)
             cached_physician_ids[full_crm]
           else
-            new_id = (Physician.create!(name: line[physician_name],
+            new_id = (Physician.create!(name: row[PHYSICIAN_NAME],
                                         crm_state: crm_state,
                                         crm_number: crm_number)
                      ).id 
@@ -73,25 +77,25 @@ class InformationUpdater
 
         cached_report_ids
         report_id = (
-          if cached_report_ids.has_key?(line[test_report_token].to_sym)
-            cached_report_ids[line[test_report_token].to_sym]
+          if cached_report_ids.has_key?(row[REPORT_TOKEN].to_sym)
+            cached_report_ids[row[REPORT_TOKEN].to_sym]
           else
             patient_id
-            new_id = (TestReport.create!(token: line[test_report_token],
+            new_id = (TestReport.create!(token: row[REPORT_TOKEN],
                                           patient_id: patient_id,
                                           physician_id: physician_id)  
                      ).id
-            cached_report_ids.store(line[test_report_token].to_sym, new_id)
+            cached_report_ids.store(row[REPORT_TOKEN].to_sym, new_id)
             new_id
           end
         )
         
         new_tests << { patient_id: patient_id,
                        test_report_id: report_id,
-                       name: line[test_name],
-                       date: line[test_date],
-                       result_range: line[test_result_range],
-                       result: line[test_result],
+                       name: row[TEST_NAME],
+                       date: row[TEST_DATE],
+                       result_range: row[TEST_RESULT_RANGE],
+                       result: row[TEST_RESULT],
                      }
       end
 
