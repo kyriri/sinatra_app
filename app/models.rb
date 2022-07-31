@@ -13,4 +13,6 @@ class TestReport < ActiveRecord::Base
   belongs_to :patient
   belongs_to :physician
   has_many :tests
+  
+  validates_uniqueness_of :token
 end
