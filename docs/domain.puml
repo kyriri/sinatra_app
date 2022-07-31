@@ -4,8 +4,8 @@
 
 class Physician {
   +name
-  +crm
   +crm_state
+  +crm_number
 }
 
 class Patient {
@@ -15,14 +15,11 @@ class Patient {
   +birth_date
 }
 
-class TestType {
+class Test {
   +name
+  +date
   +result_range
-}
-
-class TestResult {
   +result
-  +result_date
 }
 
 class TestReport {
@@ -31,11 +28,9 @@ class TestReport {
 
 Patient "1" -- "*" TestReport
 
-TestReport "1" o-- "1..*" TestResult
+Test "1..*" -o "1" TestReport
 
-TestType "1" - "*" TestResult : "         "
-' A result belongs to a test type
-' A test type can have zero or more results
+Test "*" - "1" Patient : "           "
 
 TestReport "*" - "0..1" Physician : "           "
 ' A physician may ask (a patient to do) many lab tests, which will come together in a test report
