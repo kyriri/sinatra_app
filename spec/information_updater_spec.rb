@@ -7,7 +7,7 @@ RSpec.describe InformationUpdater do
 
       InformationUpdater.call(path)
 
-      expect(Patient.all.size).to be 2
+      expect(Patient.all.size).to be 3
       
       expect(Patient.first.cpf).to eq '018.581.237-63'
       expect(Patient.first.name).to eq 'Ana Beatriz Rios'
@@ -25,10 +25,10 @@ RSpec.describe InformationUpdater do
 
       InformationUpdater.call(path)
 
-      expect(Physician.all.size).to be 1
-      expect(Physician.last.crm_number).to eq 'B0002W2RBG'
-      expect(Physician.last.crm_state).to eq 'CE'
-      expect(Physician.last.name).to eq 'Diann Klein'
+      expect(Physician.all.size).to be 2
+      expect(Physician.first.crm_number).to eq 'B0002W2RBG'
+      expect(Physician.first.crm_state).to eq 'CE'
+      expect(Physician.first.name).to eq 'Dianna Klein'
     end
 
     it 'persists lab tests to the database' do
@@ -36,7 +36,7 @@ RSpec.describe InformationUpdater do
 
       InformationUpdater.call(path)
 
-      expect(Test.all.size).to be 3
+      expect(Test.all.size).to be 4
 
       expect(Test.first.date).to eq Date.new(2021, 12, 1)
       expect(Test.first.name).to eq 'hemácias'
@@ -58,17 +58,17 @@ RSpec.describe InformationUpdater do
 
       InformationUpdater.call(path)
 
-      expect(TestReport.all.size).to be 2
+      expect(TestReport.all.size).to be 3
       expect(TestReport.first.token).to eq 'B2KHO4'
       expect(TestReport.first.patient.name).to eq 'Ana Beatriz Rios'
-      expect(TestReport.first.physician.name).to eq 'Diann Klein'
+      expect(TestReport.first.physician.name).to eq 'Dianna Klein'
       expect(TestReport.first.tests.size).to be 2
       expect(TestReport.first.tests.first.name).to eq 'hemácias'
       expect(TestReport.first.tests.last.name).to eq 'leucócitos'
 
       expect(TestReport.last.token).to eq 'L3VQDE'
       expect(TestReport.last.patient.name).to eq 'João Felipe Louzada'
-      expect(TestReport.last.physician.name).to eq 'Diann Klein'
+      expect(TestReport.last.physician.name).to eq 'Dianna Klein'
       expect(TestReport.last.tests.first.name).to eq 'vldl'
     end
   end

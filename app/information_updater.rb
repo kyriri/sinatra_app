@@ -3,9 +3,22 @@ require 'csv'
 class InformationUpdater
   
   def self.call(path)
-    registered_cpfs = Patient.pluck(:cpf)
-    registered_crms = Physician.select(:crm_state, :crm_number).map(&:join)
-    registered_tokens = TestReport.pluck(:token)
+
+    cached_patient_ids = 
+      Patient.select(:id, :cpf).each_with_object({}) do |record, cache|
+        cache.store(record.cpf.to_sym, record.id)
+      end
+
+    cached_physician_ids = 
+      Physician.select(:id, :crm_state, :crm_number).each_with_object({}) do |record, cache|
+        cache.store("#{record.crm_state}#{record.crm_number}".to_sym, record.id)
+      end
+
+    cached_report_ids = 
+        TestReport.select(:id, :token).each_with_object({}) do |record, cache|
+          cache.store(record.token.to_sym, record.id)
+        end
+
     new_tests = []
     
     File.open(path) do |file|
@@ -27,50 +40,52 @@ class InformationUpdater
       test_report_token = 'token resultado exame'
 
       CSV.foreach(file, headers: true, col_sep: ';') do |line|
+
+        patient_id = (
+          if cached_patient_ids.has_key?(line[patient_cpf].to_sym)
+            cached_patient_ids[line[patient_cpf].to_sym]
+          else
+            new_id = (Patient.create!(name: line[patient_name],
+                                      cpf: line[patient_cpf],
+                                      email: line[patient_email],
+                                      birth_date: line[patient_birth_date])
+                     ).id 
+            cached_patient_ids.store(line[patient_cpf].to_sym, new_id)
+            new_id
+          end
+        )
+
         crm_state = line[physician_crm_state].strip.upcase
         crm_number = line[physician_crm_number].strip.upcase
-        full_crm = "#{crm_state}#{crm_number}".freeze
-        
-        patient_id = (
-          if registered_cpfs.include?(line[patient_cpf])
-            Patient.find_by(cpf: line[patient_cpf]).id
-          else
-            registered_cpfs << line['cpf']
-            (Patient.create!(name: line[patient_name],
-                             cpf: line[patient_cpf],
-                             email: line[patient_email],
-                             birth_date: line[patient_birth_date],
-                            )
-            ).id   
-          end
-        )
-
+        full_crm = "#{crm_state}#{crm_number}".to_sym
         physician_id = (
-          if registered_crms.include?(full_crm)
-            Physician.find_by(crm_state: crm_state, crm_number: crm_number).id
+          if cached_physician_ids.has_key?(full_crm)
+            cached_physician_ids[full_crm]
           else
-            registered_crms << full_crm
-            (Physician.create!(name: line[physician_name],
-                                crm_state: crm_state,
-                                crm_number: crm_number,
-                              )       
-            ).id
+            new_id = (Physician.create!(name: line[physician_name],
+                                        crm_state: crm_state,
+                                        crm_number: crm_number)
+                     ).id 
+            cached_physician_ids.store(full_crm, new_id)
+            new_id
           end
         )
 
+        cached_report_ids
         report_id = (
-          if registered_tokens.include?(line[test_report_token])
-            TestReport.find_by(token: line[test_report_token]).id
+          if cached_report_ids.has_key?(line[test_report_token].to_sym)
+            cached_report_ids[line[test_report_token].to_sym]
           else
-            registered_tokens << line[test_report_token]
-            (TestReport.create!(token: line[test_report_token],
-                                patient_id: patient_id,
-                                physician_id: physician_id,
-                               )  
-            ).id
+            patient_id
+            new_id = (TestReport.create!(token: line[test_report_token],
+                                          patient_id: patient_id,
+                                          physician_id: physician_id)  
+                     ).id
+            cached_report_ids.store(line[test_report_token].to_sym, new_id)
+            new_id
           end
         )
-
+        
         new_tests << { patient_id: patient_id,
                        test_report_id: report_id,
                        name: line[test_name],

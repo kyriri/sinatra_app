@@ -13,6 +13,10 @@ spec/support/results.txt
 # Ignore SQLite files
 *.sqlite3
 
+# Ignore benchmark script and the CSV it tests against
+spec/support/benchmark.rb
+spec/support/data_4000_lines.csv
+
 # Used by dotenv library to load environment variables.
 # .env
 
