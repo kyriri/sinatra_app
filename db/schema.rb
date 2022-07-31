@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_07_29_221205) do
+ActiveRecord::Schema[7.0].define(version: 2022_07_31_010104) do
   create_table "patients", force: :cascade do |t|
     t.string "name"
     t.string "cpf"
@@ -18,6 +18,15 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_29_221205) do
     t.date "birth_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "physicians", force: :cascade do |t|
+    t.string "name"
+    t.string "crm_number"
+    t.string "crm_state"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["crm_state", "crm_number"], name: "by_crm_state_number", unique: true
   end
 
 end
