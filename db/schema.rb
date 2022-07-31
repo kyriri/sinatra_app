@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_07_31_195721) do
+ActiveRecord::Schema[7.0].define(version: 2022_07_31_234911) do
   create_table "patients", force: :cascade do |t|
     t.string "name"
     t.string "cpf"
@@ -48,8 +48,8 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_31_195721) do
     t.string "result"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "patient_id"
-    t.integer "test_report_id"
+    t.integer "patient_id", null: false
+    t.integer "test_report_id", null: false
     t.index ["patient_id"], name: "index_tests_on_patient_id"
     t.index ["test_report_id"], name: "index_tests_on_test_report_id"
   end
