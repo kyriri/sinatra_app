@@ -2,32 +2,30 @@ require 'csv'
 
 class InformationUpdater
   
-  def self.read(path)
-    CSV.read(path, col_sep: ';')
-  end
+  def self.call(path)
+    registered_cpfs = Patient.pluck(:cpf)
+    
+    File.open(path) do |file|
 
-  def self.create_patients(data)
-    indexes = {
-      patient_cpf: data[0].index('cpf'),
-      patient_name: data[0].index('nome paciente'),
-      patient_email: data[0].index('email paciente'),
-      patient_birth_date: data[0].index('data nascimento paciente'),
-      patient_address_street: data[0].index('endereço/rua paciente'),
-      patient_address_city: data[0].index('cidade paciente'),
-      patient_address_state: data[0].index('estado patiente'),
-    }
+      patient_cpf = 'cpf'
+      patient_name = 'nome paciente'
+      patient_email = 'email paciente'
+      patient_birth_date = 'data nascimento paciente'
+      test_report_token = 'token resultado exame'
 
-    data.shift # removes headers
-
-    data.each do |line|
-
-      if Patient.where(cpf: line[indexes[:patient_cpf]]).empty?
-        Patient.create(
-          name: line[indexes[:patient_name]],
-          cpf: line[indexes[:patient_cpf]],
-          email: line[indexes[:patient_email]],
-          birth_date: line[indexes[:patient_birth_date]],
-        )
+      CSV.foreach(file, headers: true, col_sep: ';') do |line|
+        # check / record patient
+        unless registered_cpfs.include?(line[patient_cpf])
+          Patient.create!(name: line[patient_name],
+                          cpf: line[patient_cpf],
+                          email: line[patient_email],
+                          birth_date: line[patient_birth_date],
+                          )        
+          registered_cpfs << line['cpf']
+        end
+        # check / record physician
+        # check / record test results
+        # build / update test report
       end
     end
   end
