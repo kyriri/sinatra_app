@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_07_31_032615) do
+ActiveRecord::Schema[7.0].define(version: 2022_07_31_195721) do
   create_table "patients", force: :cascade do |t|
     t.string "name"
     t.string "cpf"
@@ -18,6 +18,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_31_032615) do
     t.date "birth_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["cpf"], name: "index_patients_on_cpf", unique: true
   end
 
   create_table "physicians", force: :cascade do |t|
