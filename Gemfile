@@ -22,6 +22,9 @@ group :test do
 
   # main testing tool
   gem 'rspec'
+
+  # empties database before every test
+  gem 'database_cleaner-active_record'
 end
 
 group :development, :test do

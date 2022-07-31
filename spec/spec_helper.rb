@@ -18,15 +18,23 @@ ENV['RACK_ENV'] = 'test'
 
 require 'rack/test'
 require 'factory_bot'
+require 'database_cleaner/active_record'
 require_relative '../app/app'
 
 RSpec.configure do |config|
   # Make available methods to test HTTP requests
   config.include Rack::Test::Methods
 
-  # Clean testing database before every run
-  config.before :each do
-    ActiveRecord::Base.subclasses.each(&:delete_all)
+  # Cleans DB before tests
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
   end
 
   # Setup gem FactoryBot
