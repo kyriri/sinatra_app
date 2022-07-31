@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_07_31_010104) do
+ActiveRecord::Schema[7.0].define(version: 2022_07_31_021120) do
   create_table "patients", force: :cascade do |t|
     t.string "name"
     t.string "cpf"
@@ -29,4 +29,16 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_31_010104) do
     t.index ["crm_state", "crm_number"], name: "by_crm_state_number", unique: true
   end
 
+  create_table "tests", force: :cascade do |t|
+    t.string "name"
+    t.datetime "date"
+    t.string "result_range"
+    t.string "result"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "patient_id"
+    t.index ["patient_id"], name: "index_tests_on_patient_id"
+  end
+
+  add_foreign_key "tests", "patients"
 end

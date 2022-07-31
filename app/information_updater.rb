@@ -5,6 +5,7 @@ class InformationUpdater
   def self.call(path)
     registered_cpfs = Patient.pluck(:cpf)
     new_physicians = []
+    new_tests = []
     
     File.open(path) do |file|
 
@@ -16,6 +17,11 @@ class InformationUpdater
       physician_name = 'nome médico'
       physician_crm_number = 'crm médico'
       physician_crm_state = 'crm médico estado'
+
+      test_name = 'tipo exame'
+      test_date = 'data exame'
+      test_result_range = 'limites tipo exame'
+      test_result = 'resultado tipo exame'
 
       test_report_token = 'token resultado exame'
 
@@ -39,9 +45,17 @@ class InformationUpdater
                           }       
 
         # check / record test results
+        new_tests << { patient_id: Patient.find_by(cpf: line[patient_cpf]).id,
+                       name: line[test_name],
+                       date: line[test_date],
+                       result_range: line[test_result_range],
+                       result: line[test_result],
+                     }
+
         # build / update test report
       end
       Physician.insert_all(new_physicians, record_timestamps: true)
+      Test.insert_all(new_tests, record_timestamps: true)
     end
   end
 end

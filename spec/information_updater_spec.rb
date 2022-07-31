@@ -30,5 +30,27 @@ RSpec.describe InformationUpdater do
       expect(Physician.last.crm_state).to eq 'CE'
       expect(Physician.last.name).to eq 'Diann Klein'
     end
+
+    it 'persists lab tests to the database' do
+      path = File.dirname(__FILE__) + '/support/data3_simple.csv'
+
+      InformationUpdater.call(path)
+
+      expect(Test.all.size).to be 3
+
+      expect(Test.first.date).to eq Date.new(2021, 12, 1)
+      expect(Test.first.name).to eq 'hemácias'
+      expect(Test.first.result_range).to eq '45-52'
+      expect(Test.first.result).to eq '25'
+      expect(Test.first.patient.name).to eq 'Ana Beatriz Rios'
+      expect(Test.first.patient.cpf).to eq '018.581.237-63'
+
+      expect(Test.last.date).to eq Date.new(2021, 9, 10)
+      expect(Test.last.name).to eq 'vldl'
+      expect(Test.last.result_range).to eq '48-72'
+      expect(Test.last.result).to eq '60'
+      expect(Test.last.patient.name).to eq 'João Felipe Louzada'
+      expect(Test.last.patient.cpf).to eq '037.787.232-60'
+    end
   end
 end
