@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_07_31_021120) do
+ActiveRecord::Schema[7.0].define(version: 2022_07_31_032615) do
   create_table "patients", force: :cascade do |t|
     t.string "name"
     t.string "cpf"
@@ -29,6 +29,17 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_31_021120) do
     t.index ["crm_state", "crm_number"], name: "by_crm_state_number", unique: true
   end
 
+  create_table "test_reports", force: :cascade do |t|
+    t.integer "patient_id"
+    t.integer "physician_id"
+    t.string "token"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["patient_id"], name: "index_test_reports_on_patient_id"
+    t.index ["physician_id"], name: "index_test_reports_on_physician_id"
+    t.index ["token"], name: "index_test_reports_on_token", unique: true
+  end
+
   create_table "tests", force: :cascade do |t|
     t.string "name"
     t.datetime "date"
@@ -37,8 +48,13 @@ ActiveRecord::Schema[7.0].define(version: 2022_07_31_021120) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "patient_id"
+    t.integer "test_report_id"
     t.index ["patient_id"], name: "index_tests_on_patient_id"
+    t.index ["test_report_id"], name: "index_tests_on_test_report_id"
   end
 
+  add_foreign_key "test_reports", "patients"
+  add_foreign_key "test_reports", "physicians"
   add_foreign_key "tests", "patients"
+  add_foreign_key "tests", "test_reports"
 end

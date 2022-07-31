@@ -52,5 +52,24 @@ RSpec.describe InformationUpdater do
       expect(Test.last.patient.name).to eq 'João Felipe Louzada'
       expect(Test.last.patient.cpf).to eq '037.787.232-60'
     end
+
+    it 'persists a test report as a collection of tests' do
+      path = File.dirname(__FILE__) + '/support/data3_simple.csv'
+
+      InformationUpdater.call(path)
+
+      expect(TestReport.all.size).to be 2
+      expect(TestReport.first.token).to eq 'B2KHO4'
+      expect(TestReport.first.patient.name).to eq 'Ana Beatriz Rios'
+      expect(TestReport.first.physician.name).to eq 'Diann Klein'
+      expect(TestReport.first.tests.size).to be 2
+      expect(TestReport.first.tests.first.name).to eq 'hemácias'
+      expect(TestReport.first.tests.last.name).to eq 'leucócitos'
+
+      expect(TestReport.last.token).to eq 'L3VQDE'
+      expect(TestReport.last.patient.name).to eq 'João Felipe Louzada'
+      expect(TestReport.last.physician.name).to eq 'Diann Klein'
+      expect(TestReport.last.tests.first.name).to eq 'vldl'
+    end
   end
 end
