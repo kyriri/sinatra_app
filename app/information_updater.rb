@@ -1,6 +1,6 @@
 require 'csv'
 
-class InvalidType < StandardError
+class InvalidTypeError < StandardError
 end
 
 class InformationUpdater
@@ -21,6 +21,12 @@ class InformationUpdater
 
   REPORT_TOKEN = 'token resultado exame'
 
+  @@cache = nil
+
+  def self.cache
+    @@cache
+  end
+
   def self.retrieve_cache_group(type:, keys:)
     sanitized_type = type.split('_').map(&:capitalize).join
     Object.const_get(sanitized_type) # yields model name, ex: Patient
@@ -30,7 +36,7 @@ class InformationUpdater
             cache.store(cache_key, record.id)
           end
   rescue NameError
-    raise InvalidType.new "Invalid type: No matching ActiveRecord #{sanitized_type} model exists"
+    raise InvalidTypeError.new "Invalid type: No matching ActiveRecord #{sanitized_type} model exists"
   end
 
   def self.build_cache
@@ -41,16 +47,40 @@ class InformationUpdater
     }
   end
 
-  # def self.id_deliverer(type:, key:)
-  #   key = key.to_sym
-  #   if @@cache[type].has_key?(key)
-  #     @@cache[type][key]
-  #   else
-  #     new_id = 0 # (self.create_resource).id
-  #     @@cache[type].store(key, new_id)
-  #     new_id
-  #   end
-  # end
+  def self.reset_cache
+    @@cache = nil
+  end
+
+  def self.create_record(type, *args)
+    case type
+    when 'patient'
+      return
+    when 'physician'
+      return
+    when 'test_report'
+      return
+    else
+      raise InvalidTypeError.new "self.create_record doesn't know how to create a #{type} entry"
+    end
+  end
+
+  def self.id_finder(type:, keys:)
+    supported_types = ['patient', 'physician', 'test_report']
+    raise InvalidTypeError.new "Supported types are #{supported_types.join(', ')}" unless supported_types.include? type
+
+    self.build_cache unless @@cache.present?
+
+    group = "#{type}s".to_sym
+    composite_key = keys.join.to_sym
+    
+    if @@cache[group].has_key?(composite_key)
+      @@cache[group][composite_key]
+    else
+      new_id = self.create_record(type)
+      @@cache[group].store(composite_key, new_id)
+      new_id
+    end
+  end
   
   def self.call(path)
 

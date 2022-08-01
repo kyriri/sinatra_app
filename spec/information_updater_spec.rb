@@ -1,6 +1,10 @@
 RSpec.describe InformationUpdater do
   let(:app) { App.new }
 
+  before(:each) do
+    InformationUpdater.reset_cache
+  end
+
   context '.retrieve_cache_group' do
     it 'builds cache using simple key' do
       ['540.772.581-97', '184.606.175-05', '615.996.385-68'].each { |cpf| create(:patient, cpf: cpf) } 
@@ -42,7 +46,7 @@ RSpec.describe InformationUpdater do
     it 'raises exception if the table is not known' do
       expect { 
         InformationUpdater.retrieve_cache_group(type: 'happiness', keys: [:chocolate, :ice_cream]) 
-      }.to raise_error InvalidType
+      }.to raise_error InvalidTypeError
     end
 
   end
@@ -75,11 +79,42 @@ RSpec.describe InformationUpdater do
     end
   end
 
-  # context '.id_deliverer' do
-  #   it 'finds cached ids or create new db entry' do
-  #     InformationUpdater.id_deliverer(type: 'test_report', 'H78LO6F')
-  #   end
-  # end
+  context '.id_finder' do
+    it 'returns id when the item was cached' do
+      create(:test_report, token: 'P9_H8E')
+      report = create(:test_report, token: 'H78LO6F')
+
+      result = InformationUpdater.id_finder(type: 'test_report', keys: ['H78LO6F'])
+
+      expect(result).to be report.id
+    end
+
+    it 'can handle composite keys' do
+      create(:physician, crm_state: 'AC', crm_number: '2209')
+      physician = create(:physician, crm_state: 'KE', crm_number: '875L')
+
+      result = InformationUpdater.id_finder(type: 'physician', keys: ['KE', '875L'])
+
+      expect(result).to be physician.id
+    end
+
+    it 'invokes record creation and updates cache when item was not cached' do
+      allow(InformationUpdater).to receive(:create_record).and_return('creation was invoked')
+      create(:patient, cpf: '143.534.138-83')
+      create(:patient, cpf: '084.293.248-09')
+
+      result = InformationUpdater.id_finder(type: 'patient', keys: ['014.274.111-66'])
+
+      expect(result).to eq 'creation was invoked'
+      expect(InformationUpdater.cache[:patients]).to have_key '014.274.111-66'.to_sym
+
+    end
+
+    it 'raises an error if type is unknown' do
+      expect { InformationUpdater.id_finder(type: 'life_meaning', keys: ['3.14'])}
+        .to raise_error InvalidTypeError
+    end
+  end
 
   context '.call' do
     it 'persists patients to the database' do
