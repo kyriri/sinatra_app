@@ -26,12 +26,5 @@ RSpec.describe Physician do
       expect { create(:physician, crm_state: 'CE', crm_number: '1021') }
         .to raise_error ActiveRecord::RecordNotUnique
     end
-
-    xit 'should be case-insensitive' do
-      create(:physician, crm_state: 'CE', crm_number: '10m21')
-      
-      expect { create(:physician, crm_state: 'ce', crm_number: '10M21') }
-        .to raise_error ActiveRecord::RecordNotUnique
-    end
   end
 end
