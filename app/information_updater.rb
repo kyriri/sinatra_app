@@ -6,22 +6,6 @@ class InvalidTypeError < StandardError
 end
 
 class InformationUpdater
-  PATIENT_CPF = 'cpf'
-  PATIENT_NAME = 'nome paciente'
-  PATIENT_EMAIL = 'email paciente'
-  PATIENT_BIRTH_DATE = 'data nascimento paciente'
-
-  PHYSICIAN_NAME = 'nome médico'
-  PHYSICIAN_CRM_NUMBER = 'crm médico'
-  PHYSICIAN_CRM_STATE = 'crm médico estado'
-
-  TEST_NAME = 'tipo exame'
-  TEST_DATE = 'data exame'
-  TEST_RESULT_RANGE = 'limites tipo exame'
-  TEST_RESULT = 'resultado tipo exame'
-
-  REPORT_TOKEN = 'token resultado exame'
-
   @@cache = nil
 
   def self.cache
@@ -99,26 +83,26 @@ class InformationUpdater
       CSV.foreach(file, headers: true, col_sep: ';') do |row|
         data = {
           :patient => {
-            name: row[PATIENT_NAME],
-            cpf: row[PATIENT_CPF],
-            email: row[PATIENT_EMAIL],
-            birth_date: row[PATIENT_BIRTH_DATE],
+            name: row['nome paciente'],
+            cpf: row['cpf'],
+            email: row['email paciente'],
+            birth_date: row['data nascimento paciente'],
           },
           :physician => {
-            name: row[PHYSICIAN_NAME],
-            crm_state: row[PHYSICIAN_CRM_STATE].strip.upcase,
-            crm_number: row[PHYSICIAN_CRM_NUMBER].strip.upcase,
+            name: row['nome médico'],
+            crm_state: row['crm médico estado'].strip.upcase,
+            crm_number: row['crm médico'].strip.upcase,
           },
           :test_report => {
-            token: row[REPORT_TOKEN],
+            token: row['token resultado exame'],
             patient_id: nil,
             physician_id: nil,
           },
           :test => {
-            name: row[TEST_NAME],
-            date: row[TEST_DATE],
-            result_range: row[TEST_RESULT_RANGE],
-            result: row[TEST_RESULT],
+            name: row['tipo exame'],
+            date: row['data exame'],
+            result_range: row['limites tipo exame'],
+            result: row['resultado tipo exame'],
             patient_id: nil,
             test_report_id: nil,
           },
