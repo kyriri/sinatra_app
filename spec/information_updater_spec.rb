@@ -1,5 +1,7 @@
 RSpec.describe InformationUpdater do
   let(:app) { App.new }
+  # let(:path) { File.dirname(__FILE__) + '/support/data_4000_lines.csv' }
+  let(:path) { File.dirname(__FILE__) + '/support/data3_simple.csv' }
 
   before(:each) do
     InformationUpdater.reset_cache
@@ -7,73 +9,60 @@ RSpec.describe InformationUpdater do
 
   context '.call' do
     it 'persists patients to the database' do
-      path = File.dirname(__FILE__) + '/support/data3_simple.csv'
+      expect { InformationUpdater.call(path) }
+        .to change { Patient.all.size }.by_at_least 3
 
-      InformationUpdater.call(path)
+      model_patient_1 = Patient.find_by(cpf: '018.581.237-63')
+      expect(model_patient_1.name).to eq 'Ana Beatriz Rios'
+      expect(model_patient_1.email).to eq 'ana.b.rios@protonmail.com'
+      expect(model_patient_1.birth_date).to eq Date.new(1989, 9, 26)
 
-      expect(Patient.all.size).to be 3
-      
-      expect(Patient.first.cpf).to eq '018.581.237-63'
-      expect(Patient.first.name).to eq 'Ana Beatriz Rios'
-      expect(Patient.first.email).to eq 'ana.b.rios@protonmail.com'
-      expect(Patient.first.birth_date).to eq Date.new(1989, 9, 26)
-
-      expect(Patient.last.cpf).to eq '037.787.232-60'
-      expect(Patient.last.name).to eq 'João Felipe Louzada'
-      expect(Patient.last.email).to eq 'jlouzada@woohoo.com'
-      expect(Patient.last.birth_date).to eq Date.new(1985, 1, 22)
+      model_patient_2 = Patient.find_by(cpf: '037.787.232-60')
+      expect(model_patient_2.name).to eq 'João Felipe Louzada'
+      expect(model_patient_2.email).to eq 'jlouzada@woohoo.com'
+      expect(model_patient_2.birth_date).to eq Date.new(1985, 1, 22)
     end
 
     it 'persists physicians to the database' do
-      path = File.dirname(__FILE__) + '/support/data3_simple.csv'
+      expect { InformationUpdater.call(path) }
+        .to change { Physician.all.size }.by_at_least 2
 
-      InformationUpdater.call(path)
-
-      expect(Physician.all.size).to be 2
-      expect(Physician.first.crm_number).to eq 'B0002W2RBG'
-      expect(Physician.first.crm_state).to eq 'CE'
-      expect(Physician.first.name).to eq 'Dianna Klein'
+      model_physician = Physician.find_by(crm_number: 'B0002W2RBG', crm_state: 'CE')
+      expect(model_physician.name).to eq 'Dianna Klein'
     end
 
     it 'persists lab tests to the database' do
-      path = File.dirname(__FILE__) + '/support/data3_simple.csv'
+      expect { InformationUpdater.call(path) }
+        .to change { Test.all.size }.by_at_least 4
 
-      InformationUpdater.call(path)
+      model_test_1 = Test.find_by(patient_id: Patient.find_by(cpf: '018.581.237-63').id, 
+                                  date: '2021-12-01', name: 'hemácias')
+      expect(model_test_1.result_range).to eq '45-52'
+      expect(model_test_1.result).to eq '25'
+      expect(model_test_1.patient.name).to eq 'Ana Beatriz Rios'
 
-      expect(Test.all.size).to be 4
-
-      expect(Test.first.date).to eq Date.new(2021, 12, 1)
-      expect(Test.first.name).to eq 'hemácias'
-      expect(Test.first.result_range).to eq '45-52'
-      expect(Test.first.result).to eq '25'
-      expect(Test.first.patient.name).to eq 'Ana Beatriz Rios'
-      expect(Test.first.patient.cpf).to eq '018.581.237-63'
-
-      expect(Test.last.date).to eq Date.new(2021, 9, 10)
-      expect(Test.last.name).to eq 'vldl'
-      expect(Test.last.result_range).to eq '48-72'
-      expect(Test.last.result).to eq '60'
-      expect(Test.last.patient.name).to eq 'João Felipe Louzada'
-      expect(Test.last.patient.cpf).to eq '037.787.232-60'
+      model_test_2 = Test.find_by(patient_id: Patient.find_by(cpf: '037.787.232-60').id, 
+                                  date: '2021-09-10', name: 'vldl')
+      expect(model_test_2.result_range).to eq '48-72'
+      expect(model_test_2.result).to eq '60'
+      expect(model_test_2.patient.name).to eq 'João Felipe Louzada'
     end
 
     it 'persists a test report as a collection of tests' do
-      path = File.dirname(__FILE__) + '/support/data3_simple.csv'
+      expect { InformationUpdater.call(path) }
+      .to change { TestReport.all.size }.by_at_least 3
 
-      InformationUpdater.call(path)
+      model_report_1 = TestReport.find_by(token: 'B2KHO4')
+      expect(model_report_1.patient.name).to eq 'Ana Beatriz Rios'
+      expect(model_report_1.physician.name).to eq 'Dianna Klein'
+      expect(model_report_1.tests.size).to be >= 2
+      expect(model_report_1.tests.pluck(:name)).to include 'hemácias'
+      expect(model_report_1.tests.pluck(:name)).to include 'leucócitos'
 
-      expect(TestReport.all.size).to be 3
-      expect(TestReport.first.token).to eq 'B2KHO4'
-      expect(TestReport.first.patient.name).to eq 'Ana Beatriz Rios'
-      expect(TestReport.first.physician.name).to eq 'Dianna Klein'
-      expect(TestReport.first.tests.size).to be 2
-      expect(TestReport.first.tests.first.name).to eq 'hemácias'
-      expect(TestReport.first.tests.last.name).to eq 'leucócitos'
-
-      expect(TestReport.last.token).to eq 'L3VQDE'
-      expect(TestReport.last.patient.name).to eq 'João Felipe Louzada'
-      expect(TestReport.last.physician.name).to eq 'Dianna Klein'
-      expect(TestReport.last.tests.first.name).to eq 'vldl'
+      model_report_2 = TestReport.find_by(token: 'L3VQDE')
+      expect(model_report_2.patient.name).to eq 'João Felipe Louzada'
+      expect(model_report_2.physician.name).to eq 'Dianna Klein'
+      expect(model_report_2.tests.pluck(:name)).to include 'vldl'
     end
   end
 end
