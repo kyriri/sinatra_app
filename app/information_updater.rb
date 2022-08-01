@@ -21,7 +21,7 @@ class InformationUpdater
 
   REPORT_TOKEN = 'token resultado exame'
 
-  def self.build_cache(type:, keys:)
+  def self.retrieve_cache_group(type:, keys:)
     sanitized_type = type.split('_').map(&:capitalize).join
     Object.const_get(sanitized_type) # yields model name, ex: Patient
           .select(:id, *keys)
@@ -33,11 +33,30 @@ class InformationUpdater
     raise InvalidType.new "Invalid type: No matching ActiveRecord #{sanitized_type} model exists"
   end
 
+  def self.build_cache
+    @@cache = {
+      patients: self.retrieve_cache_group(type: 'patient', keys: [:cpf]),
+      physicians: self.retrieve_cache_group(type: 'physician', keys: [:crm_state, :crm_number]),
+      test_reports: self.retrieve_cache_group(type: 'test_report', keys: [:token]),
+    }
+  end
+
+  # def self.id_deliverer(type:, key:)
+  #   key = key.to_sym
+  #   if @@cache[type].has_key?(key)
+  #     @@cache[type][key]
+  #   else
+  #     new_id = 0 # (self.create_resource).id
+  #     @@cache[type].store(key, new_id)
+  #     new_id
+  #   end
+  # end
+  
   def self.call(path)
 
-    cached_patient_ids = self.build_cache(type: 'patient', keys: [:cpf])
-    cached_physician_ids = self.build_cache(type: 'physician', keys: [:crm_state, :crm_number])
-    cached_report_ids = self.build_cache(type: 'test_report', keys: [:token])
+    cached_patient_ids = self.retrieve_cache_group(type: 'patient', keys: [:cpf])
+    cached_physician_ids = self.retrieve_cache_group(type: 'physician', keys: [:crm_state, :crm_number])
+    cached_report_ids = self.retrieve_cache_group(type: 'test_report', keys: [:token])
 
     new_tests = []
     

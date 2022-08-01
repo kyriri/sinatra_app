@@ -1,11 +1,11 @@
 RSpec.describe InformationUpdater do
   let(:app) { App.new }
 
-  context '.build_cache' do
+  context '.retrieve_cache_group' do
     it 'builds cache using simple key' do
       ['540.772.581-97', '184.606.175-05', '615.996.385-68'].each { |cpf| create(:patient, cpf: cpf) } 
       
-      cached_patient_ids = InformationUpdater.build_cache(type: 'patient', keys: [:cpf])
+      cached_patient_ids = InformationUpdater.retrieve_cache_group(type: 'patient', keys: [:cpf])
 
       expect(cached_patient_ids).to be_a Hash
       expect(cached_patient_ids.first[0]).to be_a Symbol   # key
@@ -19,7 +19,7 @@ RSpec.describe InformationUpdater do
       create(:physician, crm_state: 'AL', crm_number: '3852')
       create(:physician, crm_state: 'RR', crm_number: '455')
       
-      cached_physician_ids = InformationUpdater.build_cache(type: 'physician', keys: [:crm_state, :crm_number])
+      cached_physician_ids = InformationUpdater.retrieve_cache_group(type: 'physician', keys: [:crm_state, :crm_number])
 
       expect(cached_physician_ids).to be_a Hash
       expect(cached_physician_ids.first[0]).to be_a Symbol   # key
@@ -33,7 +33,7 @@ RSpec.describe InformationUpdater do
       create(:test_report, token: 'JH9876G')
       create(:test_report, token: 'L08EHV8')
       
-      cached_reports_ids = InformationUpdater.build_cache(type: 'test_report', keys: [:token])
+      cached_reports_ids = InformationUpdater.retrieve_cache_group(type: 'test_report', keys: [:token])
 
       expect(cached_reports_ids.size).to be 2
       expect(cached_reports_ids['L08EHV8'.to_sym]).to eq TestReport.find_by(token: 'L08EHV8').id
@@ -41,11 +41,45 @@ RSpec.describe InformationUpdater do
 
     it 'raises exception if the table is not known' do
       expect { 
-        InformationUpdater.build_cache(type: 'happiness', keys: [:chocolate, :ice_cream]) 
+        InformationUpdater.retrieve_cache_group(type: 'happiness', keys: [:chocolate, :ice_cream]) 
       }.to raise_error InvalidType
     end
 
   end
+
+  context '.build_cache' do
+    it 'builds cache object' do
+      5.times { create(:patient) }
+      2.times { create(:physician) }
+      8.times { create(:test_report) }
+
+      cache = InformationUpdater.build_cache
+
+      expect(cache.keys).to eq [:patients, :physicians, :test_reports]
+      cache.values.each { |v| expect(v).to be_a Hash }
+
+      expect(cache[:patients].size).to be 5
+      expect(cache[:physicians].size).to be 2
+      expect(cache[:test_reports].size).to be 8
+    end
+
+    it 'builds cache object even if database is empty' do
+      cache = InformationUpdater.build_cache
+
+      expect(cache.keys).to eq [:patients, :physicians, :test_reports]
+      cache.values.each { |v| expect(v).to be_a Hash }
+
+      expect(cache[:patients]).to be_empty
+      expect(cache[:physicians]).to be_empty
+      expect(cache[:test_reports]).to be_empty
+    end
+  end
+
+  # context '.id_deliverer' do
+  #   it 'finds cached ids or create new db entry' do
+  #     InformationUpdater.id_deliverer(type: 'test_report', 'H78LO6F')
+  #   end
+  # end
 
   context '.call' do
     it 'persists patients to the database' do
