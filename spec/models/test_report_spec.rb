@@ -2,13 +2,13 @@ RSpec.describe TestReport do
   let(:app) { App.new }
 
   context '#token' do
-    it 'should be checked for uniqueness by ActiveRecord' do
+    it 'should NOT be checked for uniqueness by ActiveRecord' do
       create(:test_report, token: 'MVF84NV')
       duplicate = build(:test_report, token: 'MVF84NV')
       
       duplicate.valid?
 
-      expect(duplicate.errors.of_kind?(:token, :taken)).to be_truthy
+      expect(duplicate.errors.of_kind?(:token, :taken)).to be_falsy
     end
 
     it 'should be checked for uniqueness by the db' do

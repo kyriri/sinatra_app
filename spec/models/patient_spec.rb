@@ -2,13 +2,13 @@ RSpec.describe Patient do
   let(:app) { App.new }
 
   context '#cpf' do
-    it 'should be checked for uniquess by ActiveRecord' do
+    it 'should NOT be checked for uniquess by ActiveRecord' do
       create(:patient, cpf: '615.996.385-68')
       duplicate = build(:patient, cpf: '615.996.385-68')
       
       duplicate.valid?
 
-      expect(duplicate.errors.of_kind?(:cpf, :taken)).to be_truthy
+      expect(duplicate.errors.of_kind?(:cpf, :taken)).to be_falsy
     end
 
     it 'should be checked for uniquess by the DB' do
