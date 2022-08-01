@@ -96,12 +96,12 @@ RSpec.describe InformationUpdater do
     end
   end
 
-  context '.id_finder' do
+  context '.get_id' do
     it 'returns id when the item was cached' do
       create(:test_report, token: 'P9_H8E')
       report = create(:test_report, token: 'H78LO6F')
 
-      result = InformationUpdater.id_finder(type: 'test_report', keys: ['H78LO6F'], attrs: {})
+      result = InformationUpdater.get_id(type: 'test_report', keys: ['H78LO6F'], attrs: {})
 
       expect(result).to be report.id
     end
@@ -110,7 +110,7 @@ RSpec.describe InformationUpdater do
       create(:physician, crm_state: 'AC', crm_number: '2209')
       physician = create(:physician, crm_state: 'KE', crm_number: '875L')
 
-      result = InformationUpdater.id_finder(type: 'physician', keys: ['KE', '875L'], attrs: {})
+      result = InformationUpdater.get_id(type: 'physician', keys: ['KE', '875L'], attrs: {})
 
       expect(result).to be physician.id
     end
@@ -120,14 +120,14 @@ RSpec.describe InformationUpdater do
       create(:patient, cpf: '143.534.138-83')
       create(:patient, cpf: '084.293.248-09')
 
-      result = InformationUpdater.id_finder(type: 'patient', keys: ['014.274.111-66'], attrs: {})
+      result = InformationUpdater.get_id(type: 'patient', keys: ['014.274.111-66'], attrs: {})
 
       expect(result).to eq 'creation was invoked'
       expect(InformationUpdater.cache[:patients]).to have_key '014.274.111-66'.to_sym
     end
 
     it 'raises an error if type is unknown' do
-      expect { InformationUpdater.id_finder(type: 'life_meaning', keys: ['3.14'], attrs: {})}
+      expect { InformationUpdater.get_id(type: 'life_meaning', keys: ['3.14'], attrs: {})}
         .to raise_error InvalidTypeError
     end
   end

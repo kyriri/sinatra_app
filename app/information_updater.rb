@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'csv'
 
 class InvalidTypeError < StandardError
@@ -69,7 +71,7 @@ class InformationUpdater
     end
   end
 
-  def self.id_finder(type:, keys:, attrs:)
+  def self.get_id(type:, keys:, attrs:)
     supported_types = ['patient', 'physician', 'test_report']
     raise InvalidTypeError.new "Supported types are #{supported_types.join(', ')}" unless supported_types.include? type
 
@@ -88,69 +90,54 @@ class InformationUpdater
   end
   
   def self.call(path)
-
-    cached_patient_ids = self.retrieve_cache_group(type: 'patient', keys: [:cpf])
-    cached_physician_ids = self.retrieve_cache_group(type: 'physician', keys: [:crm_state, :crm_number])
-    cached_report_ids = self.retrieve_cache_group(type: 'test_report', keys: [:token])
-
     new_tests = []
+
+    self.build_cache
     
     File.open(path) do |file|
 
       CSV.foreach(file, headers: true, col_sep: ';') do |row|
+        data = {
+          :patient => {
+            name: row[PATIENT_NAME],
+            cpf: row[PATIENT_CPF],
+            email: row[PATIENT_EMAIL],
+            birth_date: row[PATIENT_BIRTH_DATE],
+          },
+          :physician => {
+            name: row[PHYSICIAN_NAME],
+            crm_state: row[PHYSICIAN_CRM_STATE].strip.upcase,
+            crm_number: row[PHYSICIAN_CRM_NUMBER].strip.upcase,
+          },
+          :test_report => {
+            token: row[REPORT_TOKEN],
+            patient_id: nil,
+            physician_id: nil,
+          },
+          :test => {
+            name: row[TEST_NAME],
+            date: row[TEST_DATE],
+            result_range: row[TEST_RESULT_RANGE],
+            result: row[TEST_RESULT],
+            patient_id: nil,
+            test_report_id: nil,
+          },
+        }
 
-        patient_id = (
-          if cached_patient_ids.has_key?(row[PATIENT_CPF].to_sym)
-            cached_patient_ids[row[PATIENT_CPF].to_sym]
-          else
-            new_id = (Patient.create!(name: row[PATIENT_NAME],
-                                      cpf: row[PATIENT_CPF],
-                                      email: row[PATIENT_EMAIL],
-                                      birth_date: row[PATIENT_BIRTH_DATE])
-                     ).id 
-            cached_patient_ids.store(row[PATIENT_CPF].to_sym, new_id)
-            new_id
-          end
-        )
+        patient_id = self.get_id(type: 'patient', attrs: data[:patient],
+          keys: [data[:patient][:cpf]])
+        data[:test_report][:patient_id] = patient_id
+        data[:test][:patient_id] = patient_id
 
-        crm_state = row[PHYSICIAN_CRM_STATE].strip.upcase
-        crm_number = row[PHYSICIAN_CRM_NUMBER].strip.upcase
-        full_crm = "#{crm_state}#{crm_number}".to_sym
-        physician_id = (
-          if cached_physician_ids.has_key?(full_crm)
-            cached_physician_ids[full_crm]
-          else
-            new_id = (Physician.create!(name: row[PHYSICIAN_NAME],
-                                        crm_state: crm_state,
-                                        crm_number: crm_number)
-                     ).id 
-            cached_physician_ids.store(full_crm, new_id)
-            new_id
-          end
-        )
+        physician_id = self.get_id(type: 'physician', attrs: data[:physician],
+          keys: [data[:physician][:crm_state], data[:physician][:crm_number]])
+        data[:test_report][:physician_id] = physician_id
 
-        cached_report_ids
-        report_id = (
-          if cached_report_ids.has_key?(row[REPORT_TOKEN].to_sym)
-            cached_report_ids[row[REPORT_TOKEN].to_sym]
-          else
-            patient_id
-            new_id = (TestReport.create!(token: row[REPORT_TOKEN],
-                                          patient_id: patient_id,
-                                          physician_id: physician_id)  
-                     ).id
-            cached_report_ids.store(row[REPORT_TOKEN].to_sym, new_id)
-            new_id
-          end
-        )
+        test_report_id = self.get_id(type: 'test_report', attrs: data[:test_report],
+          keys: [data[:test_report][:token]])
+        data[:test][:test_report_id] = test_report_id
         
-        new_tests << { patient_id: patient_id,
-                       test_report_id: report_id,
-                       name: row[TEST_NAME],
-                       date: row[TEST_DATE],
-                       result_range: row[TEST_RESULT_RANGE],
-                       result: row[TEST_RESULT],
-                     }
+        new_tests << data[:test]
       end
 
       Test.insert_all(new_tests, record_timestamps: true)

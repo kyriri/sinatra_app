@@ -9,7 +9,7 @@ RSpec.describe InformationUpdater do
     InformationUpdater.reset_cache
   end
 
-  context '.id_finder' do
+  context '.get_id' do
     it 'causes record creation when item is not in cache' do
       create(:physician, crm_state: 'es', crm_number: '534')
       create(:physician, crm_state: 'mg', crm_number: '2849n')
@@ -19,7 +19,7 @@ RSpec.describe InformationUpdater do
         crm_number: '9f48a',
       } 
 
-      result = InformationUpdater.id_finder(type: 'physician', keys: ['mt', '9f48a'], attrs: attrs)
+      result = InformationUpdater.get_id(type: 'physician', keys: ['mt', '9f48a'], attrs: attrs)
 
       expect(result).to eq Physician.last.id
       expect(Physician.last.crm_number).to eq '9F48A'
