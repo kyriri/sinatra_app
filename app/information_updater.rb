@@ -69,7 +69,7 @@ class InformationUpdater
     end
   end
 
-  def self.id_finder(type:, keys:, args:)
+  def self.id_finder(type:, keys:, attrs:)
     supported_types = ['patient', 'physician', 'test_report']
     raise InvalidTypeError.new "Supported types are #{supported_types.join(', ')}" unless supported_types.include? type
 
@@ -81,7 +81,7 @@ class InformationUpdater
     if @@cache[group].has_key?(composite_key)
       @@cache[group][composite_key]
     else
-      new_id = self.create_record(type, args)
+      new_id = self.create_record(type, attrs)
       @@cache[group].store(composite_key, new_id)
       new_id
     end
