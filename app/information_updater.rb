@@ -4,7 +4,6 @@ class InvalidTypeError < StandardError
 end
 
 class InformationUpdater
-  
   PATIENT_CPF = 'cpf'
   PATIENT_NAME = 'nome paciente'
   PATIENT_EMAIL = 'email paciente'
@@ -51,20 +50,26 @@ class InformationUpdater
     @@cache = nil
   end
 
-  def self.create_record(type, *args)
+  def self.create_record(type, attrs)
+    attrs.transform_values! { |v| v.is_a?(String) ? v.strip : v }
+
     case type
     when 'patient'
-      return
+      return Patient.create!(attrs).id
     when 'physician'
-      return
+      attrs[:crm_state] = attrs[:crm_state].upcase 
+      attrs[:crm_number] = attrs[:crm_number].upcase 
+      return Physician.create!(attrs).id
     when 'test_report'
-      return
+      return TestReport.create!(attrs).id
+    when 'test'
+      return Test.create!(attrs).id
     else
-      raise InvalidTypeError.new "self.create_record doesn't know how to create a #{type} entry"
+      raise InvalidTypeError.new "InformationUpdater.create_record doesn't know how to create a #{type} entry"
     end
   end
 
-  def self.id_finder(type:, keys:)
+  def self.id_finder(type:, keys:, args:)
     supported_types = ['patient', 'physician', 'test_report']
     raise InvalidTypeError.new "Supported types are #{supported_types.join(', ')}" unless supported_types.include? type
 
@@ -76,7 +81,7 @@ class InformationUpdater
     if @@cache[group].has_key?(composite_key)
       @@cache[group][composite_key]
     else
-      new_id = self.create_record(type)
+      new_id = self.create_record(type, args)
       @@cache[group].store(composite_key, new_id)
       new_id
     end

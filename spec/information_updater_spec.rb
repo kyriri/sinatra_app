@@ -79,12 +79,99 @@ RSpec.describe InformationUpdater do
     end
   end
 
+  context '.create_record' do
+  let(:whitespace) { ['', ' ', "\n", "\t", "\r"] }
+
+    it 'knows how to create a Patient' do
+      attrs = {
+        name: whitespace.sample + 'Salomea Skłodowska' + whitespace.sample, 
+        cpf: whitespace.sample  + '014.274.111-66'   + whitespace.sample,
+        birth_date: whitespace.sample + '1967-11-07' + whitespace.sample,
+        email: whitespace.sample + 'salomea@irsn.fr' + whitespace.sample,
+      } 
+
+      response = InformationUpdater.create_record('patient', attrs)
+
+      expect(Patient.last.name).to eq 'Salomea Skłodowska'
+      expect(Patient.last.cpf).to eq '014.274.111-66'
+      expect(Patient.last.birth_date).to eq Date.new(1967, 11, 7)
+      expect(Patient.last.email).to eq 'salomea@irsn.fr'
+      expect(response).to be Patient.last.id
+    end
+
+    it 'knows how to create a Physician' do
+      attrs = {
+        name: whitespace.sample + 'Margaret Ann Bulkley' + whitespace.sample, 
+        crm_state: whitespace.sample + 'mt' + whitespace.sample,
+        crm_number: whitespace.sample + '9f48a' + whitespace.sample,
+      } 
+
+      response = InformationUpdater.create_record('physician', attrs)
+
+      expect(Physician.last.name).to eq 'Margaret Ann Bulkley'
+      expect(Physician.last.crm_state).to eq 'MT'
+      expect(Physician.last.crm_number).to eq '9F48A'
+      expect(response).to be Physician.last.id
+    end
+
+    it 'knows how to create a Test Report' do
+      patient = create(:patient)
+      physician = create(:physician)
+      attrs = {
+        token: whitespace.sample + 'Gg45_p98' + whitespace.sample,
+        patient_id: patient.id, 
+        physician_id: physician.id,
+      } 
+
+      response = InformationUpdater.create_record('test_report', attrs)
+
+      expect(TestReport.last.token).to eq 'Gg45_p98'
+      expect(TestReport.last.patient).to eq patient
+      expect(TestReport.last.physician).to eq physician
+      expect(response).to be TestReport.last.id
+    end
+
+    it 'knows how to create a test' do
+      patient = create(:patient)
+      test_report = create(:test_report)
+      attrs = {
+        name: whitespace.sample + 'red cells count' + whitespace.sample,
+        date: whitespace.sample + '2019-05-11' + whitespace.sample,
+        result_range: whitespace.sample + '30-120' + whitespace.sample,
+        result: whitespace.sample + '55' + whitespace.sample,
+        patient_id: patient.id, 
+        test_report_id: test_report.id,
+      } 
+
+      response = InformationUpdater.create_record('test', attrs)
+
+      expect(Test.last.name).to eq 'red cells count'
+      expect(Test.last.date).to eq Date.new(2019, 5, 11)
+      expect(Test.last.result_range).to eq '30-120'
+      expect(Test.last.result).to eq '55'
+      expect(Test.last.patient).to eq patient
+      expect(Test.last.test_report).to eq test_report
+      expect(response).to be Test.last.id
+    end
+
+    it 'raises an error for other types' do
+      attrs = {
+        type: 'ski',
+        destination: 'Aspen', 
+      } 
+
+      expect { InformationUpdater.create_record('dream_vacation', attrs) }
+        .to raise_error InvalidTypeError
+    end
+  end
+
+
   context '.id_finder' do
     it 'returns id when the item was cached' do
       create(:test_report, token: 'P9_H8E')
       report = create(:test_report, token: 'H78LO6F')
 
-      result = InformationUpdater.id_finder(type: 'test_report', keys: ['H78LO6F'])
+      result = InformationUpdater.id_finder(type: 'test_report', keys: ['H78LO6F'], args: {})
 
       expect(result).to be report.id
     end
@@ -93,7 +180,7 @@ RSpec.describe InformationUpdater do
       create(:physician, crm_state: 'AC', crm_number: '2209')
       physician = create(:physician, crm_state: 'KE', crm_number: '875L')
 
-      result = InformationUpdater.id_finder(type: 'physician', keys: ['KE', '875L'])
+      result = InformationUpdater.id_finder(type: 'physician', keys: ['KE', '875L'], args: {})
 
       expect(result).to be physician.id
     end
@@ -103,7 +190,7 @@ RSpec.describe InformationUpdater do
       create(:patient, cpf: '143.534.138-83')
       create(:patient, cpf: '084.293.248-09')
 
-      result = InformationUpdater.id_finder(type: 'patient', keys: ['014.274.111-66'])
+      result = InformationUpdater.id_finder(type: 'patient', keys: ['014.274.111-66'], args: {})
 
       expect(result).to eq 'creation was invoked'
       expect(InformationUpdater.cache[:patients]).to have_key '014.274.111-66'.to_sym
@@ -111,7 +198,7 @@ RSpec.describe InformationUpdater do
     end
 
     it 'raises an error if type is unknown' do
-      expect { InformationUpdater.id_finder(type: 'life_meaning', keys: ['3.14'])}
+      expect { InformationUpdater.id_finder(type: 'life_meaning', keys: ['3.14'], args: {})}
         .to raise_error InvalidTypeError
     end
   end
